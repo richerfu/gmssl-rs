@@ -143,7 +143,7 @@ pub fn sm3_pbkdf2(
 ) -> Result<(), crate::error::GmsslError> {
     use crate::error::ok_or_library_error;
     let ret = unsafe {
-        gmssl_rs_sys::pbkdf2_hmac_sm3_genkey(
+        gmssl_rs_sys::sm3_pbkdf2(
             password.as_ptr() as *const c_char,
             password.len(),
             salt.as_ptr(),
@@ -153,7 +153,7 @@ pub fn sm3_pbkdf2(
             out.as_mut_ptr(),
         )
     };
-    ok_or_library_error(ret, "pbkdf2_hmac_sm3_genkey")
+    ok_or_library_error(ret, "sm3_pbkdf2")
 }
 
 #[cfg(test)]

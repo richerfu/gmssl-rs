@@ -2,9 +2,9 @@ use std::env;
 use std::path::PathBuf;
 
 /// GmSSL release tag that this version of the bindings was written against.
-const GMSSL_RELEASE_TAG: &str = "v3.1.1";
+const GMSSL_RELEASE_TAG: &str = "v3.2.0";
 const GMSSL_RELEASE_URL: &str =
-    "https://github.com/guanzhi/GmSSL/archive/refs/tags/v3.1.1.tar.gz";
+    "https://github.com/guanzhi/GmSSL/archive/refs/tags/v3.2.0.tar.gz";
 
 fn main() {
     // ========================================================================

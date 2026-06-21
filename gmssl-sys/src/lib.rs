@@ -75,7 +75,7 @@ extern "C" {
     pub fn sm3_hmac_update(ctx: *mut SM3_HMAC_CTX, data: *const u8, datalen: size_t);
     pub fn sm3_hmac_finish(ctx: *mut SM3_HMAC_CTX, mac: *mut u8);
 
-    pub fn pbkdf2_hmac_sm3_genkey(
+    pub fn sm3_pbkdf2(
         pass: *const c_char,
         passlen: size_t,
         salt: *const u8,

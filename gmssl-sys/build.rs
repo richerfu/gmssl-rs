@@ -80,6 +80,7 @@ fn main() {
         "ENABLE_SHA1",
         "ENABLE_SHA2",
         "ENABLE_AES",
+        "ENABLE_AES_CCM",
         "ENABLE_CHACHA20",
         "ENABLE_SM4_ECB",
         "ENABLE_SM4_OFB",
@@ -92,6 +93,7 @@ fn main() {
         "ENABLE_XMSS",
         "ENABLE_SPHINCS",
         "ENABLE_KYBER",
+        "ENABLE_TLS",
         "ENABLE_TLS_DEBUG",
     ];
     for feature in optional_features {
@@ -234,36 +236,26 @@ fn find_lib_dir(prefix: &PathBuf) -> PathBuf {
     );
 }
 
-/// Locate the GmSSL source tree, downloading it if necessary.
+/// Locate the GmSSL source tree, downloading the pinned release if necessary.
 ///
 /// Priority:
-/// 1. Git submodule at `gmssl-sys/GmSSL/` (git clone / local dev)
-/// 2. Downloaded tarball in `OUT_DIR` (crates.io / `cargo install`)
-fn locate_gmssl_source(manifest_dir: &PathBuf) -> PathBuf {
-    let submodule_dir = manifest_dir.join("GmSSL");
-
-    // --- Submodule present: use it ---
-    if submodule_dir.join("CMakeLists.txt").exists() {
-        return submodule_dir;
+/// 1. `GMSSL_SOURCE_DIR`, for local development with an explicit source tree.
+/// 2. Downloaded release tarball in `OUT_DIR`.
+fn locate_gmssl_source(_manifest_dir: &PathBuf) -> PathBuf {
+    if let Ok(source_dir) = env::var("GMSSL_SOURCE_DIR") {
+        let path = PathBuf::from(&source_dir);
+        assert!(
+            path.join("CMakeLists.txt").exists(),
+            "GMSSL_SOURCE_DIR={} is not a GmSSL source tree",
+            source_dir
+        );
+        println!("cargo:rerun-if-env-changed=GMSSL_SOURCE_DIR");
+        return path;
     }
 
-    // --- Submodule missing but directory exists (empty): try init ---
-    if submodule_dir.exists() {
-        let workspace_root = manifest_dir
-            .parent()
-            .expect("gmssl-rs-sys must live inside a workspace");
-        if let Ok(status) = std::process::Command::new("git")
-            .args(["submodule", "update", "--init", "--depth", "1"])
-            .current_dir(workspace_root)
-            .status()
-        {
-            if status.success() && submodule_dir.join("CMakeLists.txt").exists() {
-                return submodule_dir;
-            }
-        }
-    }
-
-    // --- Submodule not present (e.g. crates.io install): download release ---
+    // Always use the release tarball by default. The repository still contains
+    // a historical submodule, but it can drift from the release tag that these
+    // bindings are generated for.
     let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
     let tarball_dir = out_dir.join("gmssl-src");
     let tarball_path = out_dir.join(format!("GmSSL-{}.tar.gz", GMSSL_RELEASE_TAG));
